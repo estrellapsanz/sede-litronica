@@ -2,7 +2,7 @@ name: Comprobar tablón URJC
 
 on:
   schedule:
-    - cron: "0 7 * * *"
+    - cron: "0 7 * * *"  # Todos los días a las 07:00
   workflow_dispatch:
 
 jobs:
@@ -27,5 +27,6 @@ jobs:
           EMAIL_PASSWORD: ${{ secrets.EMAIL_PASSWORD }}
         run: python check_tablon.py
 
-      - name: Guardar estado
-        run: echo "last_seen.txt actualizado localmente en runner"
+      - name: Guardar estado localmente
+        run: |
+          echo "last_seen.txt actualizado en el runner (sin push al repo)"
