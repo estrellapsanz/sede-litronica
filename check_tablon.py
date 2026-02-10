@@ -77,22 +77,38 @@ def main():
     r = requests.get(link, timeout=30)
     soup = BeautifulSoup(r.text, "html.parser")
 
-    # Descargar PDFs de la sección de anexos (incluso si tienen parámetros)
+    # Descargar PDFs de la sección de anexos
     pdfs = []
+    # Usamos un User-Agent para que la web no rechace la petición del script
+    headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'}
+
     for a in soup.find_all("a", href=True):
         href = a["href"]
-        if ".pdf" not in href.lower():  # ✅ antes solo filtrábamos por .endswith
-            continue
-        pdf_url = href if href.startswith("http") else BASE_URL + href
-        pdf_name = pdf_url.split("/")[-1].split("?")[0]  # limpiar parámetros
+        text = a.get_text().lower()
+        
+        # Ampliamos el filtro: que contenga .pdf en el link O que el texto del enlace mencione "pdf" o "anexo"
+        if ".pdf" in href.lower() or "pdf" in text or "anexo" in text:
+            pdf_url = href if href.startswith("http") else BASE_URL + href
+            
+            # Limpiar el nombre del archivo para que no tenga caracteres raros
+            pdf_name = href.split("/")[-1].split("?")[0]
+            if not pdf_name.lower().endswith(".pdf"):
+                pdf_name += ".pdf"
 
-        try:
-            r_pdf = requests.get(pdf_url, timeout=30)
-            r_pdf.raise_for_status()
-            pdfs.append((pdf_name, r_pdf.content))
-            print(f"PDF descargado: {pdf_name}")
-        except Exception as e:
-            print(f"No se pudo descargar {pdf_url}: {e}")
+            try:
+                # Añadimos headers y permitimos redirecciones (allow_redirects=True)
+                r_pdf = requests.get(pdf_url, headers=headers, timeout=30, allow_redirects=True)
+                r_pdf.raise_for_status()
+                
+                # Verificamos que realmente sea un PDF por el Content-Type
+                if "application/pdf" in r_pdf.headers.get("Content-Type", "").lower():
+                    pdfs.append((pdf_name, r_pdf.content))
+                    print(f"PDF descargado con éxito: {pdf_name}")
+                else:
+                    print(f"El enlace {pdf_url} no parece un PDF real.")
+                    
+            except Exception as e:
+                print(f"Error descargando {pdf_url}: {e}")
 
     # Enviar correo con PDFs adjuntos
     send_email(title, link, pdfs)
