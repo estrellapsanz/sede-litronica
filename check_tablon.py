@@ -8,6 +8,7 @@ BASE_URL = "https://sede.urjc.es"
 TABLON_URL = BASE_URL + "/tablon-oficial/categoria/PAS/"
 LAST_SEEN_FILE = "last_seen.txt"
 
+# Variables de entorno para Gmail
 EMAIL_FROM = os.environ["EMAIL_FROM"]
 EMAIL_TO = os.environ["EMAIL_TO"]
 EMAIL_PASSWORD = os.environ["EMAIL_PASSWORD"]
@@ -54,13 +55,13 @@ def main():
     r = requests.get(TABLON_URL, timeout=30)
     soup = BeautifulSoup(r.text, "html.parser")
 
-    enlaces = soup.find_all("a", href=True)
-    enlaces = [a for a in enlaces if a["href"].startswith("/tablon-oficial/anuncio/")]
-
+    # Buscar todos los enlaces a anuncios
+    enlaces = [a for a in soup.find_all("a", href=True) if a["href"].startswith("/tablon-oficial/anuncio/")]
     if not enlaces:
         print("No se han encontrado anuncios")
         return
 
+    # Tomamos el primer anuncio (el más reciente)
     enlace = enlaces[0]
     link = BASE_URL + enlace["href"]
     title = enlace.get_text(strip=True)
@@ -69,36 +70,10 @@ def main():
         print("No hay anuncios nuevos")
         return
 
+    # Descargar página del anuncio
     r = requests.get(link, timeout=30)
     soup = BeautifulSoup(r.text, "html.parser")
 
+    # Descargar todos los PDFs del anuncio
     pdfs = []
-
-    # Buscar todos los enlaces dentro de la sección de anexos
-    for a in soup.find_all("a", href=True):
-        href = a["href"]
-    
-        # Filtrar solo PDFs
-        if not href.lower().endswith(".pdf"):
-            continue
-    
-        # Convertir a URL absoluta si es relativa
-        pdf_url = href if href.startswith("http") else BASE_URL + href
-    
-        pdf_name = pdf_url.split("/")[-1]
-    
-        try:
-            r = requests.get(pdf_url, timeout=30)
-            r.raise_for_status()  # asegura que se descargó correctamente
-            pdfs.append((pdf_name, r.content))
-            print(f"PDF descargado: {pdf_name}")
-        except Exception as e:
-            print(f"No se pudo descargar {pdf_url}: {e}")
-
-    
-
-    send_email(title, link, pdfs)
-    save_last_seen(link)
-
-if __name__ == "__main__":
-    main()
+    for a in soup.find_all("a"_
