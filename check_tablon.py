@@ -37,6 +37,7 @@ Enlace: {link}
 ¡Saluditos!
 """)
 
+    # Adjuntar todos los PDFs descargados
     for name, content in pdfs:
         msg.add_attachment(
             content,
@@ -45,6 +46,7 @@ Enlace: {link}
             filename=name
         )
 
+    # Enviar correo via Gmail
     with smtplib.SMTP_SSL("smtp.gmail.com", 465) as smtp:
         smtp.login(EMAIL_FROM, EMAIL_PASSWORD)
         smtp.send_message(msg)
@@ -52,16 +54,17 @@ Enlace: {link}
 def main():
     last_seen = load_last_seen()
 
+    # Descargar página principal del tablón
     r = requests.get(TABLON_URL, timeout=30)
     soup = BeautifulSoup(r.text, "html.parser")
 
-    # Buscar todos los enlaces a anuncios
+    # Buscar enlaces a anuncios
     enlaces = [a for a in soup.find_all("a", href=True) if a["href"].startswith("/tablon-oficial/anuncio/")]
     if not enlaces:
         print("No se han encontrado anuncios")
         return
 
-    # Tomamos el primer anuncio (el más reciente)
+    # Tomamos el anuncio más reciente
     enlace = enlaces[0]
     link = BASE_URL + enlace["href"]
     title = enlace.get_text(strip=True)
@@ -74,6 +77,27 @@ def main():
     r = requests.get(link, timeout=30)
     soup = BeautifulSoup(r.text, "html.parser")
 
-    # Descargar todos los PDFs del anuncio
+    # Descargar PDFs de la sección de anexos
     pdfs = []
-    for a in soup.find_all("a"_
+    for a in soup.find_all("a", href=True):
+        href = a["href"]
+        if not href.lower().endswith(".pdf"):
+            continue
+        pdf_url = href if href.startswith("http") else BASE_URL + href
+        pdf_name = pdf_url.split("/")[-1]
+        try:
+            r_pdf = requests.get(pdf_url, timeout=30)
+            r_pdf.raise_for_status()
+            pdfs.append((pdf_name, r_pdf.content))
+            print(f"PDF descargado: {pdf_name}")
+        except Exception as e:
+            print(f"No se pudo descargar {pdf_url}: {e}")
+
+    # Enviar correo con PDFs adjuntos
+    send_email(title, link, pdfs)
+
+    # Guardar último anuncio visto
+    save_last_seen(link)
+
+if __name__ == "__main__":
+    main()
