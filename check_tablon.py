@@ -55,9 +55,14 @@ def main():
     r = requests.get(TABLON_URL)
     soup = BeautifulSoup(r.text, "html.parser")
 
-    anuncio = soup.select_one("article a")
-    link = BASE_URL + anuncio["href"]
-    title = anuncio.get_text(strip=True)
+    enlaces = soup.select("a[href^='/tablon-oficial/anuncio/']")
+    if not enlaces:
+        print("No se han encontrado anuncios")
+        return
+
+    enlace = enlaces[0]
+    link = BASE_URL + enlace["href"]
+    title = enlace.get_text(strip=True)
 
     if link == last_seen:
         print("No hay anuncios nuevos")
@@ -68,13 +73,17 @@ def main():
 
     pdfs = []
     for a in soup.select("a[href$='.pdf']"):
-        pdf_url = BASE_URL + a["href"]
+        href = a.get("href")
+        if not href:
+            continue
+        pdf_url = href if href.startswith("http") else BASE_URL + href
         pdf_name = pdf_url.split("/")[-1]
         pdf_content = requests.get(pdf_url).content
         pdfs.append((pdf_name, pdf_content))
 
     send_email(title, link, pdfs)
     save_last_seen(link)
+
 
 if __name__ == "__main__":
     main()
