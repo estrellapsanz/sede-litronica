@@ -77,14 +77,15 @@ def main():
     r = requests.get(link, timeout=30)
     soup = BeautifulSoup(r.text, "html.parser")
 
-    # Descargar PDFs de la sección de anexos
+    # Descargar PDFs de la sección de anexos (incluso si tienen parámetros)
     pdfs = []
     for a in soup.find_all("a", href=True):
         href = a["href"]
-        if not href.lower().endswith(".pdf"):
+        if ".pdf" not in href.lower():  # ✅ antes solo filtrábamos por .endswith
             continue
         pdf_url = href if href.startswith("http") else BASE_URL + href
-        pdf_name = pdf_url.split("/")[-1]
+        pdf_name = pdf_url.split("/")[-1].split("?")[0]  # limpiar parámetros
+
         try:
             r_pdf = requests.get(pdf_url, timeout=30)
             r_pdf.raise_for_status()
