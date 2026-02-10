@@ -89,7 +89,7 @@ def main():
         # Ampliamos el filtro: que contenga .pdf en el link O que el texto del enlace mencione "pdf" o "anexo"
         if ".pdf" in href.lower() or "pdf" in text or "anexo" in text:
             pdf_url = href if href.startswith("http") else BASE_URL + href
-            
+            print(prf_url)
             # Limpiar el nombre del archivo para que no tenga caracteres raros
             pdf_name = href.split("/")[-1].split("?")[0]
             if not pdf_name.lower().endswith(".pdf"):
