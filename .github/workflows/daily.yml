@@ -28,9 +28,4 @@ jobs:
         run: python check_tablon.py
 
       - name: Guardar estado
-        run: |
-          git config user.name "github-actions"
-          git config user.email "github-actions@github.com"
-          git add last_seen.txt
-          git commit -m "Actualizar último anuncio" || echo "No hay cambios que commitear"
-          git push https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }} HEAD:main
+        run: echo "last_seen.txt actualizado localmente en runner"
