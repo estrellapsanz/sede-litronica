@@ -76,8 +76,8 @@ def main():
     for a in soup.find_all("a", href=True):
         href = a["href"]
         if not href.lower().endswith(".pdf"):
-            continue
-        # Si el enlace no es absoluto, añadimos BASE_URL
+            continue  
+        # si el enlace no es absoluto, añade BASE_URL
         pdf_url = href if href.startswith("http") else BASE_URL + href
         pdf_name = pdf_url.split("/")[-1]
         try:
@@ -85,6 +85,7 @@ def main():
             pdfs.append((pdf_name, pdf_content))
         except Exception as e:
             print(f"No se pudo descargar {pdf_url}: {e}")
+    
 
     send_email(title, link, pdfs)
     save_last_seen(link)
