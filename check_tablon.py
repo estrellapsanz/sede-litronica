@@ -73,18 +73,28 @@ def main():
     soup = BeautifulSoup(r.text, "html.parser")
 
     pdfs = []
+
+    # Buscar todos los enlaces dentro de la sección de anexos
     for a in soup.find_all("a", href=True):
         href = a["href"]
+    
+        # Filtrar solo PDFs
         if not href.lower().endswith(".pdf"):
-            continue  
-        # si el enlace no es absoluto, añade BASE_URL
+            continue
+    
+        # Convertir a URL absoluta si es relativa
         pdf_url = href if href.startswith("http") else BASE_URL + href
+    
         pdf_name = pdf_url.split("/")[-1]
+    
         try:
-            pdf_content = requests.get(pdf_url, timeout=30).content
-            pdfs.append((pdf_name, pdf_content))
+            r = requests.get(pdf_url, timeout=30)
+            r.raise_for_status()  # asegura que se descargó correctamente
+            pdfs.append((pdf_name, r.content))
+            print(f"PDF descargado: {pdf_name}")
         except Exception as e:
             print(f"No se pudo descargar {pdf_url}: {e}")
+
     
 
     send_email(title, link, pdfs)
