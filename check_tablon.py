@@ -28,14 +28,13 @@ def send_email(title, link, pdfs):
     msg["From"] = EMAIL_FROM
     msg["To"] = EMAIL_TO
 
-    body = f"""¡Nuevo enlace en la sede electrónica de la URJC!
+    msg.set_content(f"""¡Nuevo enlace en la sede electrónica de la URJC!
 
 Anuncio: {title}
 Enlace: {link}
 
 ¡Saluditos!
-"""
-    msg.set_content(body)
+""")
 
     for name, content in pdfs:
         msg.add_attachment(
@@ -52,10 +51,12 @@ Enlace: {link}
 def main():
     last_seen = load_last_seen()
 
-    r = requests.get(TABLON_URL)
+    r = requests.get(TABLON_URL, timeout=30)
     soup = BeautifulSoup(r.text, "html.parser")
 
-    enlaces = soup.select("a[href^='/tablon-oficial/anuncio/']")
+    enlaces = soup.find_all("a", href=True)
+    enlaces = [a for a in enlaces if a["href"].startswith("/tablon-oficial/anuncio/")]
+
     if not enlaces:
         print("No se han encontrado anuncios")
         return
@@ -68,22 +69,20 @@ def main():
         print("No hay anuncios nuevos")
         return
 
-    r = requests.get(link)
+    r = requests.get(link, timeout=30)
     soup = BeautifulSoup(r.text, "html.parser")
 
     pdfs = []
-    for a in soup.select("a[href$='.pdf']"):
-        href = a.get("href")
-        if not href:
-            continue
-        pdf_url = href if href.startswith("http") else BASE_URL + href
-        pdf_name = pdf_url.split("/")[-1]
-        pdf_content = requests.get(pdf_url).content
-        pdfs.append((pdf_name, pdf_content))
+    for a in soup.find_all("a", href=True):
+        if a["href"].lower().endswith(".pdf"):
+            href = a["href"]
+            pdf_url = href if href.startswith("http") else BASE_URL + href
+            pdf_name = pdf_url.split("/")[-1]
+            pdf_content = requests.get(pdf_url).content
+            pdfs.append((pdf_name, pdf_content))
 
     send_email(title, link, pdfs)
     save_last_seen(link)
-
 
 if __name__ == "__main__":
     main()
