@@ -47,10 +47,16 @@ Enlace: {link}
         )
 
     # Enviar correo via Gmail
-    with smtplib.SMTP_SSL("smtp.gmail.com", 465) as smtp:
+    #with smtplib.SMTP_SSL("smtp.gmail.com", 465) as smtp:
+    #    smtp.login(EMAIL_FROM, EMAIL_PASSWORD)
+    #    smtp.send_message(msg)
+  
+    with smtplib.SMTP("smtp.gmail.com", 587) as smtp:
+        smtp.ehlo()
+        smtp.starttls()
         smtp.login(EMAIL_FROM, EMAIL_PASSWORD)
-        smtp.send_message(msg)
-
+        smtp.sendmail(EMAIL_FROM, EMAIL_TO, msg.as_string())
+        
 def main():
     last_seen = load_last_seen()
 
