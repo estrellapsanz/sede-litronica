@@ -6,21 +6,33 @@ import os
 
 BASE_URL = "https://sede.urjc.es"
 TABLON_URL = BASE_URL + "/tablon-oficial/categoria/PAS/"
-LAST_SEEN_FILE = "last_seen.txt"
 
 EMAIL_FROM = os.environ["EMAIL_FROM"]
-EMAIL_TO = os.environ["EMAIL_TO"].split(",")  # "a@x.com,b@y.com"
+EMAIL_TO = os.environ["EMAIL_TO"].split(",")
 EMAIL_PASSWORD = os.environ["EMAIL_PASSWORD"]
+GITHUB_TOKEN = os.environ["GITHUB_TOKEN"]
+GITHUB_REPO = os.environ["GITHUB_REPOSITORY"]
+
+GH_API = f"https://api.github.com/repos/{GITHUB_REPO}/actions/variables/LAST_SEEN_URL"
+GH_HEADERS = {
+    "Authorization": f"Bearer {GITHUB_TOKEN}",
+    "Accept": "application/vnd.github+json"
+}
 
 def load_last_seen():
-    if not os.path.exists(LAST_SEEN_FILE):
-        return None
-    with open(LAST_SEEN_FILE) as f:
-        return f.read().strip()
+    r = requests.get(GH_API, headers=GH_HEADERS)
+    if r.status_code == 200:
+        return r.json().get("value")
+    return None
 
 def save_last_seen(url):
-    with open(LAST_SEEN_FILE, "w") as f:
-        f.write(url)
+    r = requests.patch(GH_API, headers=GH_HEADERS, json={"name": "LAST_SEEN_URL", "value": url})
+    if r.status_code == 404:
+        requests.post(
+            f"https://api.github.com/repos/{GITHUB_REPO}/actions/variables",
+            headers=GH_HEADERS,
+            json={"name": "LAST_SEEN_URL", "value": url}
+        )
 
 def send_email(title, link, pdfs):
     msg = EmailMessage()
@@ -32,7 +44,6 @@ def send_email(title, link, pdfs):
     for name, content in pdfs:
         msg.add_attachment(content, maintype="application", subtype="pdf", filename=name)
 
-    
     with smtplib.SMTP("smtp-relay.brevo.com", 587) as smtp:
         smtp.ehlo()
         smtp.starttls()
