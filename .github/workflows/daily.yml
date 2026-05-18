@@ -2,14 +2,14 @@ name: Check Tablón URJC
 
 on:
   schedule:
-    - cron: "0 7,13 * * 1-5"  # 7h y 13h UTC (9h y 15h España), lunes-viernes
-  workflow_dispatch:            # permite lanzarlo manualmente también
+    - cron: "0 7,13 * * 1-5"
+  workflow_dispatch:
 
 jobs:
   check:
     runs-on: ubuntu-latest
     permissions:
-      contents: write           # necesario para commitear last_seen.txt
+      contents: write
 
     steps:
       - uses: actions/checkout@v4
@@ -20,18 +20,14 @@ jobs:
 
       - run: pip install -r requirements.txt
 
-      - name: Ejecutar scrí
+      - name: Ejecutar script
         env:
           EMAIL_FROM: ${{ secrets.EMAIL_FROM }}
           EMAIL_TO: ${{ secrets.EMAIL_TO }}
           EMAIL_PASSWORD: ${{ secrets.EMAIL_PASSWORD }}
         run: python check_tablon.py
 
-      - name: Guardar last_seen.txt
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git pull --rebase origin main
-          git add last_seen.txt
-          git diff --cached --quiet || git commit -m "chore: update last_seen"
-          git push
+      - uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "chore: update last_seen"
+          file_pattern: last_seen.txt
