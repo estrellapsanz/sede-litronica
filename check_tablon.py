@@ -75,6 +75,11 @@ def main():
     pdfs = []
     headers = {"User-Agent": "Mozilla/5.0"}
 
+    # DEBUG: ver todos los enlaces de la página del anuncio
+    print("=== TODOS LOS ENLACES ===")
+    for a in soup.find_all("a", href=True):
+        print(f"  href={a['href']!r}  texto={a.get_text(strip=True)!r}")
+    print("=========================")
     for a in soup.find_all("a", href=True):
         href = a["href"]
         text = a.get_text().lower()
