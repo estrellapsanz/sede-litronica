@@ -87,11 +87,13 @@ def main():
             try:
                 r_pdf = requests.get(pdf_url, headers=headers, timeout=30, allow_redirects=True)
                 r_pdf.raise_for_status()
-                if "application/pdf" in r_pdf.headers.get("Content-Type", "").lower():
+                content_type = r_pdf.headers.get("Content-Type", "").lower()
+                # Aceptar por Content-Type O por extensión .pdf en la URL
+                if "application/pdf" in content_type or "octet-stream" in content_type or pdf_name.endswith(".pdf"):
                     pdfs.append((pdf_name, r_pdf.content))
-                    print(f"PDF descargado: {pdf_name}")
+                    print(f"PDF descargado: {pdf_name} ({len(r_pdf.content)} bytes)")
                 else:
-                    print(f"No es PDF real: {pdf_url}")
+                    print(f"No es PDF real: {pdf_url} — Content-Type: {content_type}")
             except Exception as e:
                 print(f"Error descargando {pdf_url}: {e}")
 
