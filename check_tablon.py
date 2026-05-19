@@ -44,7 +44,7 @@ def send_email(title, link, pdfs):
     for name, content in pdfs:
         msg.add_attachment(content, maintype="application", subtype="pdf", filename=name)
 
-    with smtplib.SMTP("smtp-relay.brevo.com", 587) as smtp:
+    with smtplib.SMTP("smtp.gmail.com", 587) as smtp:
         smtp.ehlo()
         smtp.starttls()
         smtp.login(EMAIL_FROM, EMAIL_PASSWORD)
