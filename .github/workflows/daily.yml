@@ -2,7 +2,7 @@ name: Check Tablón URJC
 
 on:
   schedule:
-    - cron: "0 7,13 * * 1-5"
+    - cron: "0 7,9,13,15 * * 1-5"
   workflow_dispatch:
 
 jobs:
