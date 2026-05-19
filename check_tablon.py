@@ -83,12 +83,13 @@ def main():
     for a in soup.find_all("a", href=True):
         href = a["href"]
         text = a.get_text().lower()
-        if ".pdf" in href.lower() or "pdf" in text or "anexo" in text:
+        if ".pdf" in href.lower() or "pdf" in text or "anexo" in text or "/tablon-oficial/anexo/" in href:
             pdf_url = href if href.startswith("http") else BASE_URL + href
             print(pdf_url)
-            pdf_name = href.split("/")[-1].split("?")[0]
-            if not pdf_name.lower().endswith(".pdf"):
-                pdf_name += ".pdf"
+            partes = [p for p in href.split("/") if p]
+            tipo = partes[-1] if partes else "documento"
+            anexo_id = partes[-2] if len(partes) >= 2 else "anexo"
+            pdf_name = f"{anexo_id}_{tipo}.pdf"
             try:
                 r_pdf = requests.get(pdf_url, headers=headers, timeout=30, allow_redirects=True)
                 r_pdf.raise_for_status()
