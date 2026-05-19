@@ -1,0 +1,6 @@
+1. En Settings repository -> secrets and ... : es donde se definen los tres secretos: 
+  - FROM: estrella.psanz@gmail.com
+  - TO: estrella.psanz@gmail.com, parrillases@madrid.es
+  - Password: BUSCAR APARTADO Contraseñas de aplicación y copiar la contraseña de aplicación aquí y SIN ESPACIOS
+
+2. El runner se ejecuta todos los días a las 8, 9, 11, 15 y 17. Si quieres ver el log vas a ejecutar workflow y ahí se ve.
